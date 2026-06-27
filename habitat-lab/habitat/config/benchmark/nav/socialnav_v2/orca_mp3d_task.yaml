@@ -1,0 +1,56 @@
+# @package _global_
+
+defaults:
+  - /habitat: habitat_config_base
+  - /habitat/task: orca_task_detail
+  - /habitat/simulator/sensor_setups@habitat.simulator.agents.agent_0: spot_agent
+  - /habitat/simulator/agents@habitat.simulator.agents.agent_0: spot
+  - /habitat/simulator/agents@habitat.simulator.agents.agent_1: human_1
+  - /habitat/simulator/agents@habitat.simulator.agents.agent_2: human_2
+  - /habitat/simulator/agents@habitat.simulator.agents.agent_3: human_3
+  - /habitat/simulator/agents@habitat.simulator.agents.agent_4: human_4
+  - /habitat/simulator/agents@habitat.simulator.agents.agent_5: human_5
+  - /habitat/simulator/agents@habitat.simulator.agents.agent_6: human_6
+  - /habitat/dataset/social_nav_v2: social-mp3d
+  - _self_
+
+habitat:
+  environment:
+    max_episode_steps: 500
+    
+  simulator:
+    type: RearrangeSim-v2
+    agents_order:
+      - agent_0
+      - agent_1
+      - agent_2
+      - agent_3
+      - agent_4
+      - agent_5
+      - agent_6
+    agents:
+      agent_0:
+        sim_sensors:
+          jaw_depth_sensor:
+            height: 256
+            width: 256
+            position:
+            - 0.0
+            - 1.25
+            - 0.0
+            orientation:
+            - 0.0
+            - 0.0
+            - 0.0
+            hfov: 90
+            sensor_subtype: PINHOLE
+            noise_model: None
+            noise_model_kwargs: {}
+            min_depth: 0.0
+            max_depth: 10.0
+            normalize_depth: true
+    kinematic_mode: True 
+    habitat_sim_v0:
+      gpu_device_id: 0
+      allow_sliding: True 
+      enable_physics: True  

@@ -1,0 +1,239 @@
+# @package _global_
+# NavThinker — policy training on Social-HM3D.
+#
+# The world model is co-trained online with the policy (coupled training): the
+# policy is optimized on real interactions with DD-PPO, while the world model is
+# optimized on a replay buffer by a separate optimizer and feeds detached
+# foresight back to the policy via feature fusion and social reward shaping.
+# (The standalone offline world-model training pipeline is not part of this release.)
+#
+# Run:
+#   bash scripts/train.sh navthinker_hm3d.yaml
+
+defaults:
+  - /benchmark/nav/socialnav_v2: navthinker_hm3d_task
+  - /habitat_baselines: habitat_baselines_rl_config_base
+  - /habitat/simulator/sim_sensors@habitat_baselines.eval.extra_sim_sensors.third_rgb_sensor: third_rgb_sensor
+  - /habitat_baselines/rl/policy@habitat_baselines.rl.policy.agent_1: single_fixed
+  - /habitat_baselines/rl/policy@habitat_baselines.rl.policy.agent_2: single_fixed
+  - /habitat_baselines/rl/policy@habitat_baselines.rl.policy.agent_3: single_fixed
+  - /habitat_baselines/rl/policy@habitat_baselines.rl.policy.agent_4: single_fixed
+  - /habitat_baselines/rl/policy@habitat_baselines.rl.policy.agent_5: single_fixed
+  - /habitat_baselines/rl/policy@habitat_baselines.rl.policy.agent_6: single_fixed
+  - /habitat/task/actions@habitat.task.actions.agent_0_discrete_stop: discrete_stop
+  - /habitat/task/actions@habitat.task.actions.agent_0_discrete_move_forward: discrete_move_forward
+  - /habitat/task/actions@habitat.task.actions.agent_0_discrete_turn_left: discrete_turn_left
+  - /habitat/task/actions@habitat.task.actions.agent_0_discrete_turn_right: discrete_turn_right
+  - /habitat/task/actions@habitat.task.actions.agent_1_oracle_nav_randcoord_action_obstacle: oracle_nav_action
+  - /habitat/task/actions@habitat.task.actions.agent_2_oracle_nav_randcoord_action_obstacle: oracle_nav_action
+  - /habitat/task/actions@habitat.task.actions.agent_3_oracle_nav_randcoord_action_obstacle: oracle_nav_action
+  - /habitat/task/actions@habitat.task.actions.agent_4_oracle_nav_randcoord_action_obstacle: oracle_nav_action
+  - /habitat/task/actions@habitat.task.actions.agent_5_oracle_nav_randcoord_action_obstacle: oracle_nav_action
+  - /habitat/task/actions@habitat.task.actions.agent_6_oracle_nav_randcoord_action_obstacle: oracle_nav_action
+  - /habitat/task/lab_sensors@habitat.task.lab_sensors.agent_0_pointgoal_with_gps_compass: pointgoal_with_gps_compass_sensor
+  - /habitat/task/lab_sensors@habitat.task.lab_sensors.agent_0_human_state_goal: human_state_goal_sensor
+  - _self_
+
+habitat:
+  dataset:
+    split: train
+  gym:
+    obs_keys:
+      - agent_0_articulated_agent_jaw_depth
+      - agent_0_pointgoal_with_gps_compass
+      - agent_0_localization_sensor
+      - agent_0_human_num_sensor
+      - agent_0_human_state_goal
+      - agent_0_oracle_humanoid_future_trajectory
+  task:
+    actions:
+      agent_0_discrete_stop:
+        lin_speed: 0.0
+        ang_speed: 0.0
+      agent_0_discrete_move_forward:
+        lin_speed: 25.0
+        ang_speed: 0.0
+        allow_dyn_slide: True
+      agent_0_discrete_turn_left:
+        lin_speed: 0.0
+        ang_speed: 10.0
+        allow_dyn_slide: True
+      agent_0_discrete_turn_right:
+        lin_speed: 0.0
+        ang_speed: -10.0
+        allow_dyn_slide: True
+      agent_1_oracle_nav_randcoord_action_obstacle:
+        type: OracleNavRandCoordAction_Obstacle
+        motion_control: human_joints
+        lin_speed: 10.0
+        ang_speed: 10.0
+        allow_dyn_slide: True
+      agent_2_oracle_nav_randcoord_action_obstacle:
+        type: OracleNavRandCoordAction_Obstacle
+        motion_control: human_joints
+        lin_speed: 10.0
+        ang_speed: 10.0
+        allow_dyn_slide: True
+      agent_3_oracle_nav_randcoord_action_obstacle:
+        type: OracleNavRandCoordAction_Obstacle
+        motion_control: human_joints
+        lin_speed: 10.0
+        ang_speed: 10.0
+        allow_dyn_slide: True
+      agent_4_oracle_nav_randcoord_action_obstacle:
+        type: OracleNavRandCoordAction_Obstacle
+        motion_control: human_joints
+        lin_speed: 10.0
+        ang_speed: 10.0
+        allow_dyn_slide: True
+      agent_5_oracle_nav_randcoord_action_obstacle:
+        type: OracleNavRandCoordAction_Obstacle
+        motion_control: human_joints
+        lin_speed: 10.0
+        ang_speed: 10.0
+        allow_dyn_slide: True
+      agent_6_oracle_nav_randcoord_action_obstacle:
+        type: OracleNavRandCoordAction_Obstacle
+        motion_control: human_joints
+        lin_speed: 10.0
+        ang_speed: 10.0
+        allow_dyn_slide: True
+
+habitat_baselines:
+  evaluate: False
+  verbose: True
+  trainer_name: "navthinker_trainer"
+  torch_gpu_id: 0
+  tensorboard_dir: "experiments/navthinker/tb"
+  video_dir: "experiments/navthinker/video"
+  checkpoint_folder: "experiments/navthinker/checkpoints"
+  test_episode_count: -1
+  num_environments: 28
+  num_updates: -1
+  total_num_steps: 15000000
+  log_interval: 1
+  num_checkpoints: -1
+  checkpoint_interval: 20
+  force_torch_single_threaded: True
+  load_resume_state_config: True
+
+  evaluator:
+    _target_: habitat_baselines.rl.ppo.navthinker_evaluator.NavThinkerEvaluator
+
+  eval:
+    use_ckpt_config: False
+    should_load_ckpt: True
+
+  rl:
+    preemption:
+      save_resume_state_interval: 20
+    agent:
+      type: "MultiAgentAccessMgr"
+      num_agent_types: 7
+      num_active_agents_per_type: [1, 1, 1, 1, 1, 1, 1]
+      num_pool_agents_per_type: [1, 1, 1, 1, 1, 1, 1]
+      agent_sample_interval: 20
+      force_partner_sample_idx: -1
+    policy:
+      agent_0:
+        name: "NavThinkerPolicy"
+    ppo:
+      clip_param: 0.2
+      ppo_epoch: 2
+      num_mini_batch: 8
+      value_loss_coef: 0.5
+      entropy_coef: 0.01
+      lr: 2.5e-4
+      eps: 1e-5
+      max_grad_norm: 0.2
+      num_steps: 128
+      use_gae: True
+      gamma: 0.99
+      tau: 0.95
+      use_linear_clip_decay: False
+      use_linear_lr_decay: False
+      reward_window_size: 50
+      use_normalized_advantage: False
+      hidden_size: 512
+      use_double_buffered_sampler: False
+
+    ddppo:
+      sync_frac: 0.6
+      distrib_backend: NCCL
+      pretrained_weights: ""
+      pretrained: False
+      pretrained_encoder: False
+      train_encoder: True
+      reset_critic: True
+      backbone: resnet50
+      rnn_type: LSTM
+      num_recurrent_layers: 2
+      # World model is trained by a separate optimizer and consumed via detached
+      # features, so it is excluded from the DDP all-reduce.
+      ddp_ignore_param_patterns:
+        - ".net.world_model."
+
+    auxiliary_losses:
+      people_counting:
+        max_human_num: 6
+        loss_scale: 0.1
+      guess_human_position:
+        max_human_num: 6
+        position_dim: 2
+        loss_scale: 0.1
+      future_trajectory_prediction:
+        max_human_num: 6
+        future_step: 4
+        loss_scale: 0.1
+
+  # ==================== World Model (co-trained with the policy) ====================
+  world_model:
+    enabled: True
+    train_world_model: True           # WM trained online alongside the policy
+    fusion_mode: late
+
+    # Encoder (ResNet, shared with the policy)
+    encoder_type: navthinker
+    navthinker_backbone: resnet50
+    navthinker_baseplanes: 32
+    navthinker_ngroups: 16
+    navthinker_pretrained_path: "pretrained_model/pretrained_habitat3.pth"
+    freeze_wm_encoder: True
+    mlp_units: 256
+
+    # Latent dynamics
+    dyn_stoch: 30
+    dyn_deter: 200
+    dyn_hidden: 200
+    dyn_discrete: 32
+
+    act: SiLU
+    norm: True
+    num_humans: 6
+    pred_horizon: 5
+    use_goal_conditioning: True
+    state_goal_dim: 8
+
+    # Online WM optimization schedule
+    wm_train_ratio: 1.0
+    wm_warmup_updates: 2
+    wm_grad_clip: 100.0
+    wm_lr: 3e-4
+    opt_eps: 1e-5
+    weight_decay: 0.0
+    wm_batch_size: 16
+    wm_sequence_length: 50
+    wm_epochs_per_update: 15
+
+    replay_buffer_size: 20000
+    replay_buffer_warmup: 5000
+
+    depth_loss_scale: 0.05
+    traj_loss_scale: 1.0
+    reward_loss_scale: 1.0
+    kl_loss_scale: 0.1
+    kl_free_bits: 1.0
+    kl_dyn_scale: 0.5
+    kl_rep_scale: 0.1
+
+    ddp: True

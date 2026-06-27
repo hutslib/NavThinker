@@ -1,0 +1,26 @@
+defaults:
+  - task_config_base
+  - measurements:
+    - distance_to_goal
+    - distance_to_goal_reward
+    - success 
+    - did_multi_agents_collide 
+    - num_steps 
+    - top_down_map
+    - spl
+    - psc
+    - stl
+    - human_collision
+  - lab_sensors:
+    - localization_sensor 
+    - risk_sensor # for prox
+    - social_compass_sensor # for prox
+  - _self_
+
+type: MultiAgentPointNavTask-v0
+end_on_success: True
+reward_measure: "distance_to_goal_reward"
+success_measure: "spl"
+success_reward: 10.0
+slack_reward: -0.002
+goal_sensor_uuid: pointgoal_with_gps_compass

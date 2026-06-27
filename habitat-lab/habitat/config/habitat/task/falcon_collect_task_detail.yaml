@@ -1,0 +1,41 @@
+defaults:
+  - task_config_base
+  - measurements:
+    - distance_to_goal
+    - distance_to_goal_reward
+    - multi_agent_nav_reward
+    - success
+    - did_multi_agents_collide
+    - num_steps
+    - top_down_map
+    - spl
+    - psc
+    - stl
+    - human_collision
+    - human_future_trajectory
+  - lab_sensors:
+    - localization_sensor
+    - human_num_sensor
+    - oracle_humanoid_future_trajectory
+    - oracle_shortest_path_sensor
+  - _self_
+
+type: MultiAgentPointNavTask-v0
+end_on_success: True
+reward_measure: "multi_agent_nav_reward"
+success_measure: "success"
+success_reward: 10.0
+slack_reward: -0.002
+goal_sensor_uuid: pointgoal_with_gps_compass
+measurements:
+  multi_agent_nav_reward:
+    type: MultiAgentNavReward
+    use_geo_distance: true
+    allow_distance: 2.0
+    collide_scene_penalty: -0.005
+    collide_human_penalty: -0.015
+    close_to_human_penalty: -0.003
+    trajectory_cover_penalty: -0.0005
+    cover_future_dis_thre: 0.05
+    robot_idx: 0
+    facing_human_dis: 2.0
